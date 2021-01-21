@@ -91,6 +91,7 @@ make install
 ```linux
 systemctl start httpd
 systemctl enable httpd
+systemctl status httpd
 ```
 ## 3. PHP Compile
 ---
