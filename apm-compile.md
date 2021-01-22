@@ -85,8 +85,17 @@ make install
 ```linux
 httpd]# ./configure
 make
+```
+- collect2: error: ld returned 1 exit status 란 오류가 뜸.
+  - 앞에서 다운받은 expat의 라이브러리를 인식하지 못해서 생기는 오류.
+> ld : 라이브러리를 찾는 링커. But. /lib, /usr/lib 같이 정해진 디렉터리만 찾는다.  그래서 expat 같은 경우 하위 디렉터리에 있기 때문에 직접 설정해줘야함.
+```linux
+httpd]# cd build/config_vars.mk
+AP_LIBS 로 시작하는 파일을 찾아서 -lexpat 추가
+httpd]# make
 make install
 ```
+
 - apache 깔렸는지 확인
 ```linux
 systemctl start httpd
