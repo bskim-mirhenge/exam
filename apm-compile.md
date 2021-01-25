@@ -95,7 +95,7 @@ systemctl enable httpd
 ## 3. MariaDB Compile
 ---
 
-> Version : MariaDB : 5.5.68
+> Version : MariaDB/5.5.68
 
 ### 3.1 MariaDB 파일 설치
 
