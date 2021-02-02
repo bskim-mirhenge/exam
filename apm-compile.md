@@ -87,6 +87,17 @@ httpd]# ./configure
 make
 make install
 ```
+
+- make 실행중 __collect2: error: ld returned 1 exit~__   
+  같은 오류가 샐길시.
+
+```linux
+vi /build/config_vars.mk
+  //AP_LIBS 로 시작하는 줄 찾아서. 맨 뒤에 -lexpat 추가.
+make clean
+make
+```
+
 - apache 깔렸는지 확인
 ```linux
 systemctl start httpd
