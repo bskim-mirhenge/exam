@@ -1,0 +1,96 @@
+# 모니터링 - 강글리아
+
+# yum 사용.
+
+# web 깔린 서버 : 192.168.59.135
+
+# 모니터링 할 서버 : 192.168.59.136
+
+[1] web 설정 서버 
+
+1. yum
+
+    yum update && yum install epel-release
+
+    yum install ganglia rrdtool ganglia-gmated ganglia-gmond ganglia-web
+
+2. id / password 설정
+
+    htpasswd -c /etc/httpd/auth.basic adminganglia             / id : adminganglia
+
+3. ganglia.conf 파일 설정
+
+    vi /etc/httpd/conf.d/ganglia.conf
+
+        Alias /ganglia /usr/share/ganglia
+        <Location /ganglia>
+        AuthType basic
+        AuthName "Ganglia web UI"
+        AuthBasicProvider file
+        AuthUserFile "/etc/httpd/auth.basic"
+        Require user adminganglia
+        </Location>
+
+4. gmetad.conf 파일 설정
+
+    vi /etc/ganglia/gmated.conf
+
+        gridname "Home office"
+
+        data_source "bskim" 60 192.168.59.135:8649
+        data_source "bskim" 60 192.168.59.136
+
+5. gmond.conf 파일 설정
+
+    vi /etc/ganglia/gmond.conf
+
+        cluster {
+        name = "Labs"             <<
+        owner = "unspecified"
+        latlong = "unspecified"
+        url = "unspecified"
+        }
+
+        udp_send_channel   {
+        mcast_join = 239.2.11.71
+        host = localhost          <<
+        port = 8649
+        ttl = 1
+        }
+
+6. 방화벽 오픈
+
+    firewalld-cmd --add-port=8649/udp
+
+    firewalld-cmd --add-port=8649/udp --permanent
+
+    setsebool -P httpd_can_network_connect 1
+
+    firewalld-cmd --reload
+
+7. restart
+
+    systemctl restart httpd gmated gmond
+
+    systemctl enable httpd gmated  gmond
+
+8. 접속
+
+    http://192.168.59.135/ganglia
+
+    id / password 입력
+
+
+[2] 추가 모니터링 할 서버
+
+1. yum
+
+    yum uodate && yum install epel-release
+
+    yum install ganglia ganglia-gmated ganglia-gmond     // gmetad 만 다운 받으면 될거 같지만 혹시 모르니까..
+
+2. start
+
+    systemctl start httpd gmond gmetad
+
+web 설정 서버에서 데몬 재시작후 ganglia web 새로고침.
