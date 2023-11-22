@@ -1,0 +1,148 @@
+# 모니터링 자빅스
+
+# epel-release / mysql 필요
+
+# web 깔린 서버 : 192.168.59.139
+
+[1] web 깔린 서버
+
+1. 설치
+
+    yum install epel-release
+
+    wget zabbix-x.x.x.tar.gz
+
+    tar -zxvf ~
+
+    yum install zabbix-server-mysql zabbix-web-mysql zabbix-agent
+
+    yum install gcc automake mysql
+
+    ./configure
+
+    make
+
+    make install
+yu
+    yum install http://~ mysql-community-release
+
+    yum install mysql-community-server
+
+    systemctl start/enable mysqld
+
+2. mysql 기본 설정
+
+    cat /var/log/mysqld.log | grep 'temporary password'  //  mysql 초기 비밀번호 찾기
+
+    mysql_secure_installation
+
+    +) 비밀번호는 특수문자 대소문자 모두 사용하여 8자 이상.
+
+    나머지는 모두 enter
+
+3. mysql 내에 zabbix 설정
+
+    mysql -u root -p
+
+        > create database zabbix character set utf8 collate utf8_bin;
+
+        > grant all pricileges on zabbix.* to 'zabbix'@'localhost' identified by '비밀번호';
+
+       // zabbix 계정 권한 설정 
+
+        > quit
+
+4. 데이터베이스에 zabbix 스키마 & 초기 데이터 가져오기
+
+    vi /etc/zabbix/zabbix_server.conf
+
+        DBHost=localhost
+        DBName=zabbix
+        DBUser=zabbix
+        DBPassword=password
+
+5. php 서버 시간 설정
+
+    vi /etc/php.ini
+
+        :se nu 로 숫자 보이게 하고 878 line 에 
+        
+        date.timezone = Asia/Seoul
+
+    systemctl restart httpd
+
+systemctl start zabbix-server zabbix-agent httpd
+
+systemctl status zabbix-server zabbix-agent httpd
+
+6. 오류해결
+
+    zabbix-server 오류시,
+
+        vi /var/log/zabbix/zabbix_server.log 보고 해결
+
+        ex) child 관련 오류시에 zabbix-agent 끄고 zabbix-server 만 재시작
+
+        ex2) 해결 안될시 SELinux 동작 해제
+
+            vi /etc/selinux/config
+
+                SELINUX=DISABLED
+
+            reboot
+
+7. web zabbix 실행
+
+    http://192.168.59.139/zabbix 
+
+    password 란에 설정한 비밀번호 입력\
+
+    Name 란에 원하는 이름 입력
+
+    초기 id/pw  :  Admin / zabbix
+
+    추후 우측 상단 사람모양 클릭하여 비밀번호 , 언어 설정 가능
+
+
+
+[2] Client 서버
+
+1. 설치
+
+    rpm ~~ noarch.rpm
+
+    yum install zabbix-agent
+
+    vi /etc/zabbix/zabbix_agentd.conf
+    
+        Server=[자빅스 서버 IP]
+
+        ServerActive=[자빅스 서버 IP]
+
+    systemctl restart zabbix-agent
+
+    systemctl enable zabbix-agent
+
+2. 방화벽 설정
+
+    
+    firewall-cmd --permanent --zone=public --add-rich-rule="rule family=ipv4 
+    source address="[자빅스 서버 IP]"  port protocol="tcp" port="10050" accept"
+
+    firewall-cmd --reload
+
+3. 서버 web 설정
+
+    서버의 zabbix web 접속.
+
+    [설정(Configuration)] -> [호스트그룹] -> 우측의 [호스트 그룹 작성]
+
+    그룹 이름 입력후 [Add]
+
+    [설정] -> [호스트] -> [호스트 작성]
+
+    호스트명 작성.  그룹 에서 생성했던 그룹 선택.  IP 주소 입력 // 추가 버튼 누르지 말것
+
+    [템플릿] 선택후 저장   ex) Template OS Linux
+
+    [설정] -> [호스트] 에서 하단 활성 상태가 초록색이면 정상.
